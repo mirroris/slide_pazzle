@@ -57,8 +57,8 @@ int main() {
         b.push_back(i+1);
     }
 
-    if (n<4 || n%2!=0) {
-        cerr << "input error: n should be larger than 4 and odd!" << endl;
+    if (n<4 || n>10 || n%2!=0) {
+        cerr << "input error: n should be [4, 10] and odd!" << endl;
         return 0;
     }
 
@@ -71,9 +71,9 @@ int main() {
         auto id = q.front();
         q.pop();
 
-        for (int i=0;i+3<=n;i+=2) {
+        for (int i=0;i+3<=(n-1);i+=2) {
             vector<int> curState = getP(id);
-            for (int j=1;j<4;j++) {
+            for (int j=1;j<2;j++) {
                 // calc rotated id
                 int tmp = curState[i];
                 curState[i] = curState[i+1];
@@ -96,8 +96,12 @@ int main() {
     if (flag) {
         cout << "possible!" << endl;
         reverse(ans.begin(), ans.end());
-        for (auto op : ans) {
-            cout << "push button" << op.first << " " << op.second << " times" << endl;
+
+        int index = 0;
+        for (;index<ans.size();index++) {
+            int cnt = 1;
+            for (;index+1<ans.size() && ans[index+1]==ans[index];index++) cnt++;
+            cout << "push button" << ans[index].first << " " << cnt << " times" << endl;
         }
     } else {
         cout << "impossible!" << endl;
