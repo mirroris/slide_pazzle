@@ -3,43 +3,18 @@
 using namespace std;
 using ll = long long;
 
-#define MAX_SIZE 10000000000
-int n;
+queue<string> q;
+unordered_map<string, vector<pair<string, int>>> g;
+unordered_map<string, bool> visited;
+vector<int> ans;
 
-ll getId(vector<int> &a) {
-    ll ret = 0;  
-    for (int i=0;i<a.size();i++) {
-        ret = ret*n + (a[i]-1);
-    }
-    return ret;
-}
-
-vector<int> getP(ll id) {
-    ll divisor = 1;
-    for (int i=0;i<n-1;i++) divisor *= n;
-
-    vector<int> ret;
-    for (int i=0;i<n;i++) {
-        ll divided = id/divisor;
-        ret.push_back(divided+1);
-        id -= divisor*(divided);
-        divisor /= n;
-    }
-    return ret;
-}
-
-queue<ll> q;
-unordered_map<ll, vector<pair<ll, pair<int, int>>>> g;
-unordered_map<ll, bool> visited;
-vector<pair<int, int>> ans;
-
-bool dfs(ll u, ll idg) {
-    if (u == idg) return true;
+bool dfs(string u, string ide) {
+    if (u == ide) return true;
 
     for (auto p : g[u]) {
-        ll v = p.first;
+        string v = p.first;
         auto op = p.second;
-        if (dfs(v, idg)) {
+        if (dfs(v, ide)) {
             ans.push_back(op);
             return true;
         }
@@ -48,52 +23,56 @@ bool dfs(ll u, ll idg) {
 }
 
 int main() {
+    cout << "input the number of tiles!" << endl;
+    int n;
     cin >> n;
-    vector<int> a, b;
+    if (n<4 || n>16 || n%2!=0) {
+        cerr << "input error: n should be [4, 16] and odd!" << endl;
+        return 0;
+    }
+ 
+    cout << "input the permutation to align" << endl;
+    string a, e;
     for (int i=0;i<n;i++) {
         int ax;
         cin >> ax;
-        a.push_back(ax);
-        b.push_back(i+1);
+        ax--;
+        a.push_back('0'+ax);
+        e.push_back('0'+i);
     }
 
-    if (n<4 || n>10 || n%2!=0) {
-        cerr << "input error: n should be [4, 10] and odd!" << endl;
-        return 0;
-    }
+    q.push(a);
+    visited[a] = true;
 
-    ll ids = getId(a);
-    q.push(ids);
-    visited[ids] = true;
-
+    ll searchOrder = 0;
     // construct graph
     while (!q.empty()) {
-        auto id = q.front();
+        searchOrder++;
+        auto p = q.front();
         q.pop();
+        if (p == e) cout << "found!" << endl;
 
         for (int i=0;i+3<=(n-1);i+=2) {
-            vector<int> curState = getP(id);
-            for (int j=1;j<2;j++) {
-                // calc rotated id
-                int tmp = curState[i];
-                curState[i] = curState[i+1];
-                curState[i+1] = curState[i+3];
-                curState[i+3] = curState[i+2];
-                curState[i+2] = tmp;
+            string swapped = p;
+            // calc rotated id
+            int tmp = swapped[i];
+            swapped[i] = swapped[i+1];
+            swapped[i+1] = swapped[i+3];
+            swapped[i+3] = swapped[i+2];
+            swapped[i+2] = tmp;
 
-                ll swappedId = getId(curState);
-                if (visited.find(swappedId) == visited.end()) {
-                    if (g.find(id) == g.end()) g.insert(make_pair(id, vector<pair<ll, pair<int, int>>>()));
-                    g[id].push_back(make_pair(swappedId, make_pair(i/2 + 1, j)));
-                    q.push(swappedId);
-                    visited[swappedId] = true;
-                } else continue;
-            }
+            if (visited.find(swapped) == visited.end()) {
+                if (g.find(p) == g.end()) g.insert(make_pair(p, vector<pair<string, int>>()));
+                g[p].push_back(make_pair(swapped, i/2 + 1));
+                q.push(swapped);
+                visited[swapped] = true;
+            } else continue;
         }
     }
 
-    bool flag = dfs(getId(a), getId(b));
-    if (flag) {
+    cout << "you found  = " << visited.size() << " permutations that can reach the goal!!" << endl;
+
+    if (dfs(a, e)) {
         cout << "possible!" << endl;
         reverse(ans.begin(), ans.end());
 
@@ -101,7 +80,7 @@ int main() {
         for (;index<ans.size();index++) {
             int cnt = 1;
             for (;index+1<ans.size() && ans[index+1]==ans[index];index++) cnt++;
-            cout << "push button" << ans[index].first << " " << cnt << " times" << endl;
+            cout << "push button" << ans[index] << " " << cnt << " times" << endl;
         }
     } else {
         cout << "impossible!" << endl;
